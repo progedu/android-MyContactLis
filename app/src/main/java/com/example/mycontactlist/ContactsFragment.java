@@ -15,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+
 public class ContactsFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>,
         AdapterView.OnItemClickListener {
@@ -76,101 +77,28 @@ public class ContactsFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-        }
-
         // Inflate the fragment layout
         return inflater.inflate(R.layout.contacts_list_view,
                 container, false);
     }
 
-    // Request code for READ_CONTACTS. It can be any number > 0.
-    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        mSearchString = "ro"; // "ro of Taro/Jiro/Saburo "
-
-        // Gets the ListView from the View list of the parent activity
-        mContactsList =
-                (ListView) getActivity().findViewById(R.id.contacts_fragment);
-        // Gets a CursorAdapter
-        mCursorAdapter = new SimpleCursorAdapter(
-                getActivity(),
-                R.layout.contacts_list_item,
-                null,
-                FROM_COLUMNS, TO_IDS,
-                0);
-        // Sets the adapter for the ListView
-        mContactsList.setAdapter(mCursorAdapter);
-
-        // Set the item click listener to be the current fragment.
-        mContactsList.setOnItemClickListener(this);
-
-        // Check the SDK version and whether the permission is already granted or not.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-        } else {
-            loadView();
-        }
-    }
-
-    private void loadView() {
-        // Initializes the loader
-        getLoaderManager().initLoader(0, null, ContactsFragment.this);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
-        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
-            if (grantResults.length > 0  && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission is granted
-                loadView();
-            } else {
-                Toast.makeText(getActivity(), "Until you grant the permission, we canot display the names", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        /*
-         * Makes search string into pattern and
-         * stores it in the selection array
-         */
-        mSelectionArgs[0] = "%" + mSearchString + "%";
-        // Starts the query
-        return new CursorLoader(
-                getActivity(),
-                ContactsContract.Contacts.CONTENT_URI,
-                PROJECTION,
-                SELECTION,
-                mSelectionArgs,
-                null
-        );
+    public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
+        return null;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        // Put the result Cursor in the adapter for the ListView
-        mCursorAdapter.swapCursor(cursor);
+
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        // Delete the reference to the existing Cursor
-        mCursorAdapter.swapCursor(null);
-    }
 
+    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View item, int position, long rowID) {
 
     }
-
 }
