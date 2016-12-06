@@ -120,7 +120,7 @@ public class ContactsFragment extends Fragment implements
         }
     }
 
-    private void loadView() {
+    public void loadView() {
         // Initializes the loader
         getLoaderManager().initLoader(0, null, ContactsFragment.this);
     }
