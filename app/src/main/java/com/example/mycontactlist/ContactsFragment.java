@@ -2,26 +2,29 @@ package com.example.mycontactlist;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
-import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.QuickContactBadge;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -49,7 +52,7 @@ public class ContactsFragment extends Fragment implements
     // Define a ListView object
     ListView mContactsList;
 
-    private SimpleCursorAdapter mCursorAdapter;
+    private CursorAdapter mCursorAdapter;
 
     @SuppressLint("InlinedApi")
     private static final String[] PROJECTION =
@@ -59,7 +62,8 @@ public class ContactsFragment extends Fragment implements
                     Email.TYPE,
                     Email.LABEL,
                     Contacts._ID,
-                    Contacts.LOOKUP_KEY
+                    Contacts.LOOKUP_KEY,
+                    Contacts.PHOTO_THUMBNAIL_URI
             };
 
     // Defines the text expression
@@ -102,13 +106,12 @@ public class ContactsFragment extends Fragment implements
         // Gets the ListView from the View list of the parent activity
         mContactsList =
                 (ListView) getActivity().findViewById(R.id.contacts_fragment);
-        // Gets a CursorAdapter
-        mCursorAdapter = new SimpleCursorAdapter(
-                getActivity(),
-                R.layout.contacts_list_item,
-                null,
-                FROM_COLUMNS, TO_IDS,
-                0);
+        /*
+         * Instantiates the subclass of
+         * CursorAdapter
+         */
+        mCursorAdapter =
+                new ContactsAdapter(getActivity());
         // Sets the adapter for the ListView
         mContactsList.setAdapter(mCursorAdapter);
 
@@ -209,6 +212,85 @@ public class ContactsFragment extends Fragment implements
 
         // Sends the Intent
         startActivityForResult(editIntent, REQUEST_EDIT_CONTACT);
+    }
+
+    private class ContactsAdapter extends CursorAdapter {
+        private LayoutInflater mInflater;
+
+
+        public ContactsAdapter(Context context) {
+            super(context, null, 0);
+
+            /*
+             * Gets an inflater that can instantiate
+             * the ListView layout from the file.
+             */
+            mInflater = LayoutInflater.from(context);
+        }
+
+        /**
+         * Defines a class that hold resource IDs of each item layout
+         * row to prevent having to look them up each time data is
+         * bound to a row.
+         */
+        private class ViewHolder {
+            TextView email;
+            QuickContactBadge quickcontact;
+        }
+
+        @Override
+        public View newView(
+                Context context,
+                Cursor cursor,
+                ViewGroup viewGroup) {
+            /* Inflates the item layout. Stores resource IDs in a
+             * in a ViewHolder class to prevent having to look
+             * them up each time bindView() is called.
+             */
+            final View itemView =
+                    mInflater.inflate(
+                            R.layout.contacts_list_item,
+                            viewGroup,
+                            false
+                    );
+            final ViewHolder holder = new ViewHolder();
+            holder.email =
+                    (TextView) itemView.findViewById(R.id.text1);
+            holder.quickcontact =
+                    (QuickContactBadge)
+                            itemView.findViewById(R.id.quickbadge);
+            itemView.setTag(holder);
+            return itemView;
+        }
+
+        @Override
+        public void bindView(
+                View view,
+                Context context,
+                Cursor cursor) {
+
+            final ViewHolder holder = (ViewHolder) view.getTag();
+            final String photoUri = cursor.getString(6); // PHOTO_THUMBNAIL_URI
+
+            final String email = cursor.getString(1); // ADDRESS
+            holder.email.setText(email);
+
+            // Gets the lookup key column index
+            int mLookupKeyIndex = mCursor.getColumnIndex(Contacts.LOOKUP_KEY);
+            // Gets the _ID column index
+            int mIdIndex = mCursor.getColumnIndex(Contacts._ID);
+
+            /*
+             * Generates a contact URI for the QuickContactBadge.
+             */
+            final Uri contactUri = Contacts.getLookupUri(
+                    cursor.getLong(mIdIndex),
+                    cursor.getString(mLookupKeyIndex));
+            holder.quickcontact.assignContactUri(contactUri);
+            if(photoUri != null) {
+                holder.quickcontact.setImageURI(Uri.parse(photoUri));
+            }
+        }
     }
 
 }
