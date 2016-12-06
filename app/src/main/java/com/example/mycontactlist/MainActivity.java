@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    private static int REQUEST_ADD_CONTACT = 1;
+    private static final int REQUEST_ADD_CONTACT = 1;
 
     public void addContact(View view) {
         // Creates a new Intent to insert a contact

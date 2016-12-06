@@ -2,8 +2,10 @@ package com.example.mycontactlist;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
@@ -55,7 +57,9 @@ public class ContactsFragment extends Fragment implements
                     Email._ID,
                     Email.ADDRESS,
                     Email.TYPE,
-                    Email.LABEL
+                    Email.LABEL,
+                    Contacts._ID,
+                    Contacts.LOOKUP_KEY
             };
 
     // Defines the text expression
@@ -168,9 +172,43 @@ public class ContactsFragment extends Fragment implements
         mCursorAdapter.swapCursor(null);
     }
 
+    public static final int REQUEST_EDIT_CONTACT = 2;
+
     @Override
     public void onItemClick(AdapterView<?> parent, View item, int position, long rowID) {
+        Cursor mCursor = mCursorAdapter.getCursor();
 
+        // Moves to the Cursor row corresponding to the ListView item that was clicked
+        mCursor.moveToPosition(position);
+
+        /*
+         * Once the user has selected a contact to edit,
+         * this gets the contact's lookup key and _ID values from the
+         * cursor and creates the necessary URI.
+         */
+        // Gets the lookup key column index
+        int mLookupKeyIndex = mCursor.getColumnIndex(Contacts.LOOKUP_KEY);
+        // Gets the lookup key value
+        String mCurrentLookupKey = mCursor.getString(mLookupKeyIndex);
+        // Gets the _ID column index
+        int mIdIndex = mCursor.getColumnIndex(Contacts._ID);
+        long mCurrentId = mCursor.getLong(mIdIndex);
+        Uri mSelectedContactUri =
+                Contacts.getLookupUri(mCurrentId, mCurrentLookupKey);
+        // Creates a new Intent to edit a contact
+        Intent editIntent = new Intent(Intent.ACTION_EDIT);
+
+        /*
+         * Sets the contact URI to edit, and the data type that the
+         * Intent must match
+         */
+        editIntent.setDataAndType(mSelectedContactUri,Contacts.CONTENT_ITEM_TYPE);
+
+        // Sets the special extended data for navigation
+        editIntent.putExtra("finishActivityOnSaveCompleted", true);
+
+        // Sends the Intent
+        startActivityForResult(editIntent, REQUEST_EDIT_CONTACT);
     }
 
 }
