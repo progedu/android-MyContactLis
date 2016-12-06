@@ -7,6 +7,8 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -31,10 +33,7 @@ public class ContactsFragment extends Fragment implements
     */
     @SuppressLint("InlinedApi")
     private final static String[] FROM_COLUMNS = {
-            Build.VERSION.SDK_INT
-                    >= Build.VERSION_CODES.HONEYCOMB ?
-                    Contacts.DISPLAY_NAME_PRIMARY :
-                    Contacts.DISPLAY_NAME
+            Email.ADDRESS
     };
     /*
      * Defines an array that contains resource ids for the layout views
@@ -53,21 +52,21 @@ public class ContactsFragment extends Fragment implements
     @SuppressLint("InlinedApi")
     private static final String[] PROJECTION =
             {
-                    Contacts._ID,
-                    Contacts.LOOKUP_KEY,
-                    Build.VERSION.SDK_INT
-                            >= Build.VERSION_CODES.HONEYCOMB ?
-                            Contacts.DISPLAY_NAME_PRIMARY :
-                            Contacts.DISPLAY_NAME
-
+                    Email._ID,
+                    Email.ADDRESS,
+                    Email.TYPE,
+                    Email.LABEL
             };
 
     // Defines the text expression
     @SuppressLint("InlinedApi")
     private static final String SELECTION =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
-                    Contacts.DISPLAY_NAME_PRIMARY + " LIKE ?" :
-                    Contacts.DISPLAY_NAME + " LIKE ?";
+            Email.ADDRESS + " LIKE ?" +
+                    " AND " +
+                    Data.MIMETYPE + " = " +
+                    "'" + Email.CONTENT_ITEM_TYPE + "'";
+
+    private static final String SORT_ORDER = Email.TYPE + " ASC ";
 
     // Defines a variable for the search string
     private String mSearchString;
@@ -149,11 +148,11 @@ public class ContactsFragment extends Fragment implements
         // Starts the query
         return new CursorLoader(
                 getActivity(),
-                Contacts.CONTENT_URI,
+                Data.CONTENT_URI,
                 PROJECTION,
                 SELECTION,
                 mSelectionArgs,
-                null
+                SORT_ORDER
         );
     }
 
